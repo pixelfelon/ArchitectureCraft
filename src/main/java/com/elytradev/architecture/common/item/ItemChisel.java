@@ -38,12 +38,20 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.oredict.OreDictionary;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.util.Arrays;
 
 public class ItemChisel extends Item {
 
     public ItemChisel() {
         this.setMaxStackSize(1);
     }
+
+    public static final int oreIDBlockGlass = OreDictionary.getOreID("blockGlass");
+    public static final int oreIDPaneGlass = OreDictionary.getOreID("paneGlass");
+    public static final int oreIDGlowstone = OreDictionary.getOreID("glowstone");
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
@@ -57,12 +65,17 @@ public class ItemChisel extends Item {
         }
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
-        if (block == Blocks.GLASS || block == Blocks.GLASS_PANE
-                || block == Blocks.GLOWSTONE || block == Blocks.ICE) {
+        int[] blockOreIDs = OreDictionary.getOreIDs(new ItemStack(block));
+        if (
+            ArrayUtils.contains(blockOreIDs, oreIDBlockGlass)
+            || ArrayUtils.contains(blockOreIDs, oreIDPaneGlass)
+            || ArrayUtils.contains(blockOreIDs, oreIDGlowstone)
+            || block == Blocks.ICE
+        ) {
             world.setBlockState(pos, Blocks.AIR.getDefaultState(), 0x3);
             if (!world.isRemote) {
                 this.dropBlockAsItem(world, pos, state);
-                world.playEvent(2001, pos, Block.getStateId(Blocks.STONE.getDefaultState())); // block breaking sound and particles
+                world.playEvent(2001, pos, Block.getStateId(state)); // block breaking sound and particles
             }
             return EnumActionResult.SUCCESS;
         }

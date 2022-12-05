@@ -37,6 +37,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -44,6 +45,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -67,8 +69,43 @@ public class Utils {
         return player != null && player.capabilities != null && player.capabilities.isCreativeMode;
     }
 
+    private static class FakeAtlasSprite extends TextureAtlasSprite {
+        public FakeAtlasSprite(TextureAtlasSprite other) {
+            super("architecture:fake");
+            this.copyFrom(other);
+        }
+
+        public void adjustIconSize(int width, int height) {
+            int origInX = round(this.originX / this.getMinU());
+            int origInY = round(this.originY / this.getMinV());
+            this.setIconWidth(width);
+            this.setIconHeight(height);
+            this.initSprite(origInX, origInY, this.originX, this.originY, this.rotated);
+        }
+    }
+
     public static TextureAtlasSprite getSpriteForBlockState(IBlockState state) {
-        if (!Objects.equals(state.getBlock(), Blocks.AIR))
+        Block block = state.getBlock();
+        @Nullable ResourceLocation blockResource = block.getRegistryName();
+
+        if (blockResource != null && blockResource.getNamespace().equals("chisel")){
+            // Attempt some trickery to force a 16x16 sprite.
+            // Chisel's only larger sprites are used for randomization AFAIK, not intended to be rendered at that res.
+            ItemStack blockStack = new ItemStack(block, 1, block.damageDropped(state));
+            TextureAtlasSprite base = Minecraft.getMinecraft().getRenderItem()
+                    .getItemModelWithOverrides(blockStack, null, null).getParticleTexture();
+            if (base.getIconWidth() == 16 || base.getIconHeight() == 16)
+                // No need!
+                return base;
+
+            // Just grab the top left 16x16 pixels.
+            // TODO: Would love to randomize which sub-sprite we grab, but this API won't accommodate it.
+            FakeAtlasSprite out = new FakeAtlasSprite(base);
+            out.adjustIconSize(16, 16);
+            return out;
+        }
+
+        else if (!Objects.equals(block, Blocks.AIR))
             return Minecraft.getMinecraft().getBlockRendererDispatcher()
                     .getBlockModelShapes().getTexture(state);
         else
