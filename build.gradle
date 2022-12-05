@@ -140,9 +140,9 @@ if (needsShadow) {
         shadowJar { mappingType = 'SEARGE' }
     }
 
-    tasks.reobfJar.doLast {
-        file('build/libs/' + archivesBaseName + '-' + version + '-slim.jar').delete()
-    }
+//    tasks.reobfJar.doLast {
+//        file('build/libs/' + archivesBaseName + '-' + version + '-slim.jar').delete()
+//    }
 
     tasks.build.dependsOn reobfShadowJar
 

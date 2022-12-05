@@ -69,21 +69,7 @@ public class Utils {
         return player != null && player.capabilities != null && player.capabilities.isCreativeMode;
     }
 
-    private static class FakeAtlasSprite extends TextureAtlasSprite {
-        public FakeAtlasSprite(TextureAtlasSprite other) {
-            super("architecture:fake");
-            this.copyFrom(other);
-        }
-
-        public void adjustIconSize(int width, int height) {
-            int origInX = round(this.originX / this.getMinU());
-            int origInY = round(this.originY / this.getMinV());
-            this.setIconWidth(width);
-            this.setIconHeight(height);
-            this.initSprite(origInX, origInY, this.originX, this.originY, this.rotated);
-        }
-    }
-
+    @SideOnly(Side.CLIENT)
     public static TextureAtlasSprite getSpriteForBlockState(IBlockState state) {
         Block block = state.getBlock();
         @Nullable ResourceLocation blockResource = block.getRegistryName();
